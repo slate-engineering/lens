@@ -8,20 +8,12 @@ import * as Search from "~/node_common/search";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import compression from "compression";
-import MiniSearch from "minisearch";
 
 const server = express();
 
 //make it so can only access with a proper API key (JWT.verify)
 
 const LENS = "SERVER START    ";
-
-const _cache = {
-  users: [],
-  slates: [],
-  miniSearch: null,
-};
 
 Search.initSearch();
 

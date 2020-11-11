@@ -6,7 +6,6 @@ import * as Search from "~/node_common/search";
 import WebSocket from "ws";
 
 let ws;
-let pingTimeout;
 
 export const create = () => {
   if (ws) {

@@ -1,8 +1,6 @@
 import * as Data from "~/node_common/data";
 import * as Strings from "~/common/strings";
 
-const _cache = {}; //cache recently searched (how to update if it changes? is caching only short term?)
-
 export const slatesTrie = {};
 export const usersTrie = {};
 export const filesTrie = {};
@@ -20,15 +18,12 @@ export const initSearch = async () => {
     addItem({ ...user, type: "USER" });
   }
 };
-//maybe record saved at when updating records, and only update if it's more recent
-//if I'm saving the cached search queries by query, I can check if the incoming change's search terms would overlap with any cached queries, and if they do, remove them from the cache (since they're no longer relevant)
 
 export const search = (query, type) => {
-  console.log(`QUERY: ${query}`);
+  // console.log(`QUERY: ${query}`);
   //check the cache
   let searchResults = [];
   let searchTerms = parseSearchTerms([query]);
-  console.log(searchTerms);
   for (let term of searchTerms) {
     if (type === "USER" || !type) {
       searchResults.push(...searchFuzzy(term, usersTrie, 1 / term.length));
@@ -52,7 +47,11 @@ export const search = (query, type) => {
       noRepeats.push(searchResults[i]);
     }
   }
-  let results = searchResults.map((res) => {
+  let results = searchResults.sort((a, b) => b.weight - a.weight);
+  if (results.length > 50) {
+    results = results.slice(0, 0);
+  }
+  results = results.map((res) => {
     let item = res.data.value;
     let ownerId;
     if (item.type === "USER") {
