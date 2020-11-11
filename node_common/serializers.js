@@ -28,3 +28,30 @@ export const slate = (entity) => {
     },
   };
 };
+
+export const doSlates = async ({ serializedUsers, slates }) => {
+  const userToSlatesMap = {};
+
+  const sanitized = slates.map((d) => {
+    let o = null;
+
+    if (userToSlatesMap[d.data.ownerId]) {
+      userToSlatesMap[d.data.ownerId].push(d);
+    }
+
+    if (!userToSlatesMap[d.data.ownerId]) {
+      userToSlatesMap[d.data.ownerId] = [d];
+    }
+
+    if (d.data.ownerId) {
+      o = serializedUsers.find((e) => d.data.ownerId === e.id);
+    }
+
+    return { ...d, owner: o };
+  });
+
+  return {
+    serializedSlates: JSON.parse(JSON.stringify(sanitized)),
+    userToSlatesMap,
+  };
+};
