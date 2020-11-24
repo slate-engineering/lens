@@ -188,12 +188,6 @@ const parseSearchTerms = (names) => {
   return searchTerms;
 };
 
-const parseTags = () => {
-  //a tag should end at punctuation, or a space. it can include numbers, dashes, underscores
-  //it shoudl be converted to lowercase
-  //could also do this at the db storage stage if preferable. applies to users, slates, and files
-};
-
 export const updateTrie = (update) => {
   if (update.type === "ADD") {
     console.log(update.data);
