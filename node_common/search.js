@@ -95,7 +95,6 @@ const searchFuzzy = (term, curr, charWeight, weight = 1) => {
   if (!term.length) {
     let searchResults = [];
     if (weight > MIN_WEIGHT) {
-      console.log("below min weight");
       for (let char of Object.keys(curr)) {
         if (char.length === 1) {
           searchResults.push(...searchFuzzy(term, curr[char], charWeight, weight - charWeight)); //NOTE(martina): missing last letter
