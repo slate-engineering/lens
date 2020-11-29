@@ -30,12 +30,11 @@ export const create = () => {
   // });
 
   ws.on("open", () => {
-    console.log("websocket opened");
+    console.log("WEBSOCKET OPENED");
     ws.send(JSON.stringify({ type: "LENS_SUBSCRIBE_HOST", data: {} }));
   });
 
   ws.on("message", (event) => {
-    console.log("websocket message");
     if (!ws || !event) {
       return;
     }
@@ -61,10 +60,9 @@ export const create = () => {
   });
 
   ws.on("close", () => {
-    console.log("Websocket disconnected");
+    console.log("WEBSOCKET DISCONNECTED");
   });
 
-  console.log("websocket created");
   return ws;
 };
 
