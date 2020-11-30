@@ -1,6 +1,6 @@
 # Lens
 
-A lightweight server for returning serialized for users and slates in various ways
+Search micro-service
 
 ### Environment Variables
 
