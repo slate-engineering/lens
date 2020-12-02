@@ -3,7 +3,7 @@ import * as ScriptLogging from "~/node_common/script-logging";
 import * as Data from "~/node_common/data";
 import * as Serializers from "~/node_common/serializers";
 import * as Websocket from "~/node_common/nodejs-websocket";
-import * as Search from "~/node_common/search";
+import * as Search from "~/node_common/search-v2";
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -28,9 +28,6 @@ server.get("/", async (req, res) => {
   return res.status(200).json({
     decorator: "LENS",
     data: {
-      users: Search.usersTrie,
-      slates: Search.slatesTrie,
-      files: Search.filesTrie,
       hashtable: Search.hashtable,
     },
   });
