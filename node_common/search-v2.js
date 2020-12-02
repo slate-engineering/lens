@@ -31,7 +31,6 @@ export const search = (query, type) => {
       limit: 100,
       suggest: true,
     });
-    console.log(resultIds);
   } else {
     resultIds = index.search(query, { field: ["name", "title"], limit: 100, suggest: true });
   }
@@ -64,16 +63,16 @@ export const search = (query, type) => {
 
 export const updateIndex = (update) => {
   if (update.type === "ADD") {
-    console.log(update.data);
-    console.log("ADD TO TRIE");
+    // console.log(update.data);
+    // console.log("ADD TO TRIE");
     addItem(update.data);
   } else if (update.type === "REMOVE") {
-    console.log(update.data.id);
-    console.log("REMOVE FROM TRIE");
+    // console.log(update.data.id);
+    // console.log("REMOVE FROM TRIE");
     removeItem(update.data.id);
   } else if (update.type === "EDIT") {
-    console.log(update.data);
-    console.log("EDIT TRIE");
+    // console.log(update.data);
+    // console.log("EDIT TRIE");
     editItem(update.data);
   }
 };
