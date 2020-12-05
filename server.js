@@ -15,8 +15,6 @@ const server = express();
 
 const LENS = "SERVER START    ";
 
-Search.initSearch();
-
 Websocket.create();
 
 server.use(bodyParser.json());
@@ -27,9 +25,7 @@ server.get("/", async (req, res) => {
 
   return res.status(200).json({
     decorator: "LENS",
-    data: {
-      hashtable: Search.hashtable,
-    },
+    data: "lens operational!",
   });
 });
 
@@ -39,7 +35,7 @@ server.get("/:query", async (req, res) => {
 });
 
 server.post("/search", async (req, res) => {
-  let searchResults = Search.search(req.body.data.query, req.body.data.type);
+  let searchResults = await Search.search(req.body.data.query, req.body.data.type);
   return res.status(200).json({ decorator: "LENS", data: { results: searchResults } });
 });
 

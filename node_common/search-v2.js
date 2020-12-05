@@ -1,8 +1,21 @@
 import * as Data from "~/node_common/data";
+
 import FlexSearch from "flexsearch";
+import asyncRedis from "async-redis";
 
 let index;
-export const hashtable = {};
+const client = asyncRedis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
+client.auth(process.env.REDIS_PASSWORD);
+
+client.on("connect", function () {
+  console.log("connected");
+  client.flushall();
+  initSearch();
+});
+
+client.on("error", function (error) {
+  console.log(error);
+});
 
 export const initSearch = async () => {
   index = new FlexSearch({
@@ -12,17 +25,29 @@ export const initSearch = async () => {
       store: ["id", "type"],
     },
   });
+  let items = [];
   let slates = await Data.getEverySlate();
   for (let slate of slates) {
-    addItem({ ...slate, type: "SLATE" });
+    items.push({ ...slate, type: "SLATE" });
+    if (slate.data.objects && slate.data.objects.length) {
+      for (let i = 0; i < slate.data.objects.length; i++) {
+        let file = slate.data.objects[i];
+        items.push({
+          data: { file, slate: { id: slate.id } },
+          type: "FILE",
+          id: `${file.id}-${slate.id}`,
+        });
+      }
+    }
   }
   let users = await Data.getEveryUser();
   for (let user of users) {
-    addItem({ ...user, type: "USER" });
+    items.push({ ...user, type: "USER" });
   }
+  addItems(items);
 };
 
-export const search = (query, type) => {
+export const search = async (query, type) => {
   let resultIds;
   if (type) {
     resultIds = index.search(query, {
@@ -34,31 +59,64 @@ export const search = (query, type) => {
   } else {
     resultIds = index.search(query, { field: ["name", "title"], limit: 100, suggest: true });
   }
-  let results = resultIds.map((res) => {
-    let item = hashtable[res.id];
+  resultIds = resultIds.map((obj) => obj.id);
+  let results = await client.mget(resultIds);
+  results = results.map((res) => JSON.parse(res));
+
+  let slateResults = [];
+  if (!type || type === "FILE") {
+    let slateIds = results.filter((item) => item.type === "FILE").map((item) => item.data.slate.id);
+    if (slateIds && slateIds.length) {
+      slateResults = await client.mget(slateIds);
+      slateResults = slateResults.map((res) => JSON.parse(res));
+    }
+  }
+  let ownerResults = [];
+  if (!type || type === "SLATE") {
+    let ownerIds = results.filter((item) => item.type === "SLATE").map((item) => item.data.ownerId);
+    ownerIds.push(...slateResults.map((item) => item.data.ownerId));
+    if (ownerIds && ownerIds.length) {
+      ownerResults = await client.mget(ownerIds);
+      ownerResults = ownerResults.map((res) => JSON.parse(res));
+    }
+  }
+
+  let slatetable = {};
+  for (let result of slateResults) {
+    slatetable[result.id] = result;
+  }
+  let usertable = {};
+  for (let result of ownerResults) {
+    usertable[result.id] = result;
+  }
+
+  let serialized = [];
+  for (let item of results) {
     let ownerId;
     if (item.type === "USER") {
       ownerId = item.id;
     } else if (item.type === "SLATE") {
       ownerId = item.data.ownerId;
-      if (hashtable[ownerId]) {
-        item.owner = hashtable[ownerId];
+      let owner = usertable[ownerId];
+      if (owner) {
+        item.owner = owner;
       }
     } else if (item.type === "FILE") {
       let slateId = item.data.slate.id;
-      if (hashtable[slateId]) {
-        item.data.slate = hashtable[slateId];
-        ownerId = hashtable[slateId].data.ownerId;
-
-        if (hashtable[ownerId]) {
-          item.data.slate.owner = hashtable[ownerId];
+      let slate = slatetable[slateId];
+      if (slate) {
+        item.data.slate = slate;
+        ownerId = slate.data.ownerId;
+        let owner = usertable[ownerId];
+        if (owner) {
+          item.data.slate.owner = owner;
         }
       }
     }
-    return { item, ownerId };
-  });
+    serialized.push({ item, ownerId });
+  }
   //NOTE(martina): surface the ownerId (for sorting / filtering) and serialize slates and files with their respective slates + owners
-  return results;
+  return serialized;
 };
 
 export const updateIndex = (update) => {
@@ -75,6 +133,29 @@ export const updateIndex = (update) => {
     // console.log("EDIT TRIE");
     editItem(update.data);
   }
+};
+
+const addItems = (items) => {
+  let toAdd = [];
+  for (let item of items) {
+    let name;
+    let title;
+    if (item.type === "USER") {
+      name = item.username;
+      title = item.data.name;
+    } else if (item.type === "SLATE") {
+      name = item.slatename;
+      title = item.data.name;
+    } else if (item.type === "FILE") {
+      name = item.data.file.name;
+      title = item.data.file.title;
+    }
+    let id = item.id;
+    index.add({ name, title, type: item.type, id });
+    toAdd.push(id);
+    toAdd.push(JSON.stringify(item));
+  }
+  client.mset(...toAdd);
 };
 
 const addItem = (item) => {
@@ -102,16 +183,17 @@ const addItem = (item) => {
   }
   let id = item.id;
   index.add({ name, title, type: item.type, id });
-  hashtable[id] = item;
+  client.set(id, JSON.stringify(item));
 };
 
 const removeItem = (id) => {
   index.remove(id);
-  delete hashtable[id];
+  client.del(id);
 };
 
-const editItem = (newItem) => {
-  let item = hashtable[newItem.id];
+const editItem = async (newItem) => {
+  let item = await client.get(newItem.id);
+  item = JSON.parse(item);
   let reinsert = false;
   if (
     newItem.type === "USER" &&
@@ -134,7 +216,7 @@ const editItem = (newItem) => {
     handleFileChanges(newItem, item);
   }
 
-  hashtable[newItem.id] = newItem;
+  await client.set(newItem.id, JSON.stringify(newItem));
   if (reinsert) {
     index.update(newItem);
   }
