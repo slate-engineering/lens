@@ -60,7 +60,10 @@ export const search = async (query, type) => {
     resultIds = index.search(query, { field: ["name", "title"], limit: 100, suggest: true });
   }
   resultIds = resultIds.map((obj) => obj.id);
-  let results = await client.mget(resultIds);
+  let results = [];
+  if (resultIds && resultIds.length) {
+    results = await client.mget(resultIds);
+  }
   results = results.map((res) => JSON.parse(res));
 
   let slateResults = [];
@@ -136,6 +139,7 @@ export const updateIndex = (update) => {
 };
 
 const addItems = (items) => {
+  if (!items || !items.length) return;
   let toAdd = [];
   for (let item of items) {
     let name;
@@ -155,10 +159,13 @@ const addItems = (items) => {
     toAdd.push(id);
     toAdd.push(JSON.stringify(item));
   }
-  client.mset(...toAdd);
+  if (toAdd && toAdd.length) {
+    client.mset(...toAdd);
+  }
 };
 
 const addItem = (item) => {
+  if (!item) return;
   let name;
   let title;
   if (item.type === "USER") {
@@ -187,11 +194,13 @@ const addItem = (item) => {
 };
 
 const removeItem = (id) => {
+  if (!id) return;
   index.remove(id);
   client.del(id);
 };
 
 const editItem = async (newItem) => {
+  if (!newItem || !newItem.id) return;
   let item = await client.get(newItem.id);
   item = JSON.parse(item);
   let reinsert = false;
