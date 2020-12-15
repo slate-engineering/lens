@@ -203,6 +203,10 @@ const editItem = async (newItem) => {
   if (!newItem || !newItem.id) return;
   let item = await client.get(newItem.id);
   item = JSON.parse(item);
+  if (!item) {
+    addItem(newItem);
+    return;
+  }
   let reinsert = false;
   if (
     newItem.type === "USER" &&
