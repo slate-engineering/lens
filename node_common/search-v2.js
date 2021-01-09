@@ -29,7 +29,7 @@ export const initSearch = async () => {
   let slates = await Data.getEverySlate();
   for (let slate of slates) {
     items.push({ ...slate, type: "SLATE" });
-    if (slate.data.objects && slate.data.objects.length) {
+    if (slate?.data?.objects?.length) {
       for (let i = 0; i < slate.data.objects.length; i++) {
         let file = slate.data.objects[i];
         items.push({
@@ -68,7 +68,9 @@ export const search = async (query, type) => {
 
   let slateResults = [];
   if (!type || type === "FILE") {
-    let slateIds = results.filter((item) => item.type === "FILE").map((item) => item.data.slate.id);
+    let slateIds = results
+      .filter((item) => item?.type === "FILE")
+      .map((item) => item.data.slate.id);
     if (slateIds && slateIds.length) {
       slateResults = await client.mget(slateIds);
       slateResults = slateResults.map((res) => JSON.parse(res));
@@ -76,9 +78,11 @@ export const search = async (query, type) => {
   }
   let ownerResults = [];
   if (!type || type === "SLATE") {
-    let ownerIds = results.filter((item) => item.type === "SLATE").map((item) => item.data.ownerId);
-    ownerIds.push(...slateResults.map((item) => item.data.ownerId));
-    if (ownerIds && ownerIds.length) {
+    let ownerIds = results
+      .filter((item) => item?.type === "SLATE")
+      .map((item) => item.data.ownerId);
+    ownerIds.push(...slateResults.map((item) => item?.data.ownerId));
+    if (ownerIds?.length) {
       ownerResults = await client.mget(ownerIds);
       ownerResults = ownerResults.map((res) => JSON.parse(res));
     }
@@ -95,6 +99,9 @@ export const search = async (query, type) => {
 
   let serialized = [];
   for (let item of results) {
+    if (!item) {
+      continue;
+    }
     let ownerId;
     if (item.type === "USER") {
       ownerId = item.id;
@@ -139,9 +146,12 @@ export const updateIndex = (update) => {
 };
 
 const addItems = (items) => {
-  if (!items || !items.length) return;
+  if (!items?.length) return;
   let toAdd = [];
   for (let item of items) {
+    if (!item) {
+      continue;
+    }
     let name;
     let title;
     if (item.type === "USER") {
