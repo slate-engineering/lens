@@ -1,7 +1,7 @@
 import * as Environment from "~/node_common/environment";
 import * as ScriptLogging from "~/node_common/script-logging";
 import * as Strings from "~/common/strings";
-import * as Search from "~/node_common/search-v2";
+import * as Search from "~/node_common/search-v3";
 
 import WebSocket from "ws";
 
