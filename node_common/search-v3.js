@@ -66,7 +66,6 @@ export const search = async (query, type) => {
   let results = [];
   if (resultIds && resultIds.length) {
     results = await client.mget(...resultIds);
-    console.log(results);
   }
   results = results.map((res) => JSON.parse(res));
 
@@ -106,28 +105,24 @@ export const search = async (query, type) => {
     if (!item) {
       continue;
     }
-    let ownerId;
+    let ownerId, file, user, slate;
     if (item.type === "USER") {
+      user = item;
       ownerId = item.id;
     } else if (item.type === "SLATE") {
       ownerId = item.data.ownerId;
-      let owner = usertable[ownerId];
-      if (owner) {
-        item.owner = owner;
-      }
+      user = usertable[ownerId];
+      slate = item;
     } else if (item.type === "FILE") {
+      file = item.data.file;
       let slateId = item.data.slate.id;
-      let slate = slatetable[slateId];
+      slate = slatetable[slateId];
       if (slate) {
-        item.data.slate = slate;
         ownerId = slate.data.ownerId;
-        let owner = usertable[ownerId];
-        if (owner) {
-          item.data.slate.owner = owner;
-        }
+        user = usertable[ownerId];
       }
     }
-    serialized.push({ item, ownerId });
+    serialized.push({ type: item.type, file, user, slate, ownerId });
   }
   //NOTE(martina): surface the ownerId (for sorting / filtering) and serialize slates and files with their respective slates + owners
   return serialized;
