@@ -3,7 +3,7 @@ import * as ScriptLogging from "~/node_common/script-logging";
 import * as Data from "~/node_common/data";
 import * as Serializers from "~/node_common/serializers";
 import * as Websocket from "~/node_common/nodejs-websocket";
-import * as Search from "~/node_common/search-v3";
+import * as Search from "~/node_common/search-v4";
 
 import express from "express";
 import bodyParser from "body-parser";
