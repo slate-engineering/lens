@@ -79,8 +79,8 @@ export const search = async (query, type) => {
     }
   }
 
-  let usertable = {};
   for (let result of ownerResults) {
+    if (!result) continue;
     usertable[result.id] = result;
   }
 
