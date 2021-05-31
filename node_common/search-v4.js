@@ -79,6 +79,7 @@ export const search = async (query, type) => {
     }
   }
 
+  let usertable = {};
   for (let result of ownerResults) {
     if (!result) continue;
     usertable[result.id] = result;
@@ -107,7 +108,6 @@ export const search = async (query, type) => {
 };
 
 export const updateIndex = (update) => {
-  console.log(update.data);
   if (update.action === "ADD") {
     // console.log(update.data);
     console.log("ADD TO TRIE");
