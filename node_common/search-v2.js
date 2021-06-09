@@ -4,8 +4,11 @@ import FlexSearch from "flexsearch";
 import asyncRedis from "async-redis";
 
 let index;
-const client = asyncRedis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
-client.auth(process.env.REDIS_PASSWORD);
+const client = asyncRedis.createClient(
+  process.env.SEARCH_REDIS_PORT,
+  process.env.SEARCH_REDIS_HOST
+);
+client.auth(process.env.SEARCH_REDIS_PASSWORD);
 
 client.on("connect", function () {
   console.log("connected");

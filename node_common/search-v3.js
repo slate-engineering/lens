@@ -5,9 +5,9 @@ import Redis from "ioredis";
 
 let index;
 let client = new Redis({
-  port: process.env.REDIS_PORT,
-  host: process.env.REDIS_HOST,
-  password: process.env.REDIS_PASSWORD,
+  port: process.env.SEARCH_REDIS_PORT,
+  host: process.env.SEARCH_REDIS_HOST,
+  password: process.env.SEARCH_REDIS_PASSWORD,
 });
 
 client.on("connect", function () {
